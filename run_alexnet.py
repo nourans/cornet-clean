@@ -83,7 +83,7 @@ if FLAGS.ngpus > 0:
 def get_model(pretrained=False):
     map_location = None if FLAGS.ngpus > 0 else 'cpu'
     
-    # Load AlexNet model
+    # load ALEXNET
     model = models.alexnet(pretrained=True)
 
     if FLAGS.ngpus == 0:
@@ -96,16 +96,16 @@ def get_model(pretrained=False):
 def extract_true_label_from_path(image_path: str) -> str:
     import re, os
     basename = os.path.basename(image_path)
-    # 1) Adversarial pattern
+    # 1. adversarial pattern
     m = re.search(r'^[^_]+_([A-Za-z_]+?)\d+_init', basename)
     if m:
         return m.group(1)
-    # 2) Standard ImageNet val folder
+    # 2. standard imagenet val folder
     parent = os.path.basename(os.path.dirname(image_path))
     if '_' in parent:
         label_part = parent.split('_', 1)[1]
         return label_part
-    # 3) Fallback from filename
+    # 3. fallback from filename
     stem = os.path.splitext(basename)[0]
     pieces = stem.split('_')
     if pieces:
@@ -123,30 +123,29 @@ def test(layer='decoder', sublayer='avgpool', time_step=0, imsize=224):
         - time_step (not used here)
         - imsize (default 224): The size to resize input images to
     """
-    # Load the model with pretrained weights
+    # load the model with pretrained weights
     model = get_model(pretrained=True)
 
-    # Define preprocessing transformations for input images
+    # define preprocessing transformations for input images
     transform = torchvision.transforms.Compose([
         torchvision.transforms.Resize((imsize, imsize)),
         torchvision.transforms.ToTensor(),
         normalize,
     ])
 
-    # Set model to evaluation mode (disables dropout, batchnorm updates)
+    # set model to evaluation mode (disables dropout, batchnorm updates)
     model.eval()
 
-    # Load ImageNet class labels from a file (fixes "Unknown" issue)
+    # load ImageNet class labels from a file (fixes "Unknown" issue)
     imagenet_classes = {i: label.strip() for i, label in enumerate(open("imagenet_classes.txt").readlines())}
     
     
-    # Get all image file paths from the dataset directory (recursively search subdirectories)
+    # get all image file paths from the dataset directory (recursively search subdirectories)
     fnames = []
     for ext in ["*.JPEG", "*.jpeg", "*.JPG", "*.jpg", "*.png"]:
         fnames.extend(glob.glob(os.path.join(FLAGS.data_path, "**", ext), recursive=True))
-    # fnames = sorted(glob.glob(os.path.join(FLAGS.data_path, '**', '*.png', '*.JPEG', ), recursive=True))
 
-    # If no images are found, raise an error
+    # if no images are found, raise eror
     if len(fnames) == 0:
         raise FileNotFoundError(f'No files found in {FLAGS.data_path}')
 
@@ -178,23 +177,23 @@ def test(layer='decoder', sublayer='avgpool', time_step=0, imsize=224):
             #     predicted_label = imagenet_classes[predicted_index.item()]
             ################################################################################
 
-            # Convert predicted index to human-readable label
+            # convert predicted index to human-readable label
             predicted_label = imagenet_classes.get(predicted_index.item(), "Unknown")
             # CHECKPOINT:
             print(f"🧐 Predicted Class Name: {predicted_label}")
 
-            # Extract true label (supports adversarial names and val/val folders)
+            # extract true label (supports adversarial names and val/val folders)
             basename = os.path.basename(image_path)
             true_label = extract_true_label_from_path(image_path)
 
-            # Compare with predicted label
+            # compare with predicted label
             if true_label == predicted_label:
                 print("✅ MATCH!")
                 count += 1
             else:
                 print("❌ NOPE")
 
-            # Print results in a clear format
+            # print results in a clear format
             print(f"{basename} → True: {true_label} | AlexNet: {predicted_label}")
             #print(f"{os.path.basename(image_path)} → True: {true_label} | AlexNet: {predicted_label}")
     

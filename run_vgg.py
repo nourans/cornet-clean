@@ -186,112 +186,23 @@ def train(restore_path=None,  # useful when you want to restart training
 
             data_load_start = time.time()
 
-#collapse comments here
-    # def test(layer='decoder', sublayer='avgpool', time_step=0, imsize=224):
-    #     """
-    #     Suitable for small image sets. If you have thousands of images or it is
-    #     taking too long to extract features, consider using
-    #     `torchvision.datasets.ImageFolder`, using `ImageNetVal` as an example.
-
-    #     Kwargs:
-    #         - layers (choose from: V1, V2, V4, IT, decoder)
-    #         - sublayer (e.g., output, conv1, avgpool)
-    #         - time_step (which time step to use for storing features)
-    #         - imsize (resize image to how many pixels, default: 224)
-    #     """
-    #     model = get_model(pretrained=True)
-    #     transform = torchvision.transforms.Compose([
-    #                     torchvision.transforms.Resize((imsize, imsize)),
-    #                     torchvision.transforms.ToTensor(),
-    #                     normalize,
-    #                 ])
-    #     model.eval()
-
-    #     # Load test dataset (expects data in `data_path/val/` with subfolders for each class)
-    #     test_dataset = torchvision.datasets.ImageFolder(os.path.join(FLAGS.data_path, "val"), transform=transform)
-    #     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=FLAGS.batch_size, shuffle=False)
-
-    #     correct = 0
-    #     total = 0
-
-    #     with torch.no_grad():
-    #         for images, labels in tqdm.tqdm(test_loader, desc="Testing"):
-    #             if FLAGS.ngpus > 0:
-    #                 images, labels = images.cuda(), labels.cuda()
-
-    #             outputs = model(images)
-    #             _, predicted = torch.max(outputs, 1)
-
-    #             total += labels.size(0)
-    #             correct += (predicted == labels).sum().item()
-
-    #     accuracy = 100 * correct / total
-    #     print(f"Model Accuracy: {accuracy:.2f}%")
-
-    #     # def _store_feats(layer, inp, output):
-    #     #     """An ugly but effective way of accessing intermediate model features
-    #     #     """
-    #     #     output = output.cpu().numpy()
-    #     #     reshaped_output = np.reshape(output, (len(output), -1))
-    #     #     print(f"DEBUG: Extracted feature shape {reshaped_output.shape}")
-    #     #     _model_feats.append(reshaped_output)
-
-    #     # try:
-    #     #     m = model.module
-    #     # except:
-    #     #     m = model
-    #     # model_layer = getattr(getattr(m, layer), sublayer)
-    #     # model_layer.register_forward_hook(_store_feats)
-
-    #     # model_feats = []
-    #     # with torch.no_grad():
-    #     #     model_feats = []
-    #     #     fnames = sorted(glob.glob(os.path.join(FLAGS.data_path, '*.*')))
-    #     #     if len(fnames) == 0:
-    #     #         raise FileNotFoundError(f'No files found in {FLAGS.data_path}')
-    #     #     for fname in tqdm.tqdm(fnames):
-    #     #         try:
-    #     #             im = Image.open(fname).convert('RGB')
-    #     #         except:
-    #     #             raise FileNotFoundError(f'Unable to load {fname}')
-    #     #         im = transform(im)
-    #     #         im = im.unsqueeze(0)  # adding extra dimension for batch size of 1
-    #     #         _model_feats = []
-    #     #         print("DEBUG: Running model forward pass")
-    #     #         model(im)
-    #     #         print("DEBUG: Model forward pass completed")
-    #     #         model_feats.append(_model_feats[time_step])
-    #     #     model_feats = np.concatenate(model_feats)
-
-    #     # print("DEBUG: Number of extracted features:", len(model_feats))
-    #     # print("DEBUG: Model features:", model_feats)
-    #     # if FLAGS.output_path is not None:
-    #     #     # Nouran Edit: Also save the features as a CSV file
-    #     #     csv_filename = f'CORnet-{FLAGS.model}_{layer}_{sublayer}_feats.csv'
-    #     #     csv_path = os.path.join(FLAGS.output_path, csv_filename)
-    #     #     np.savetxt(csv_path, model_feats, delimiter=",", fmt="%.6f")
-    #     #     # original code:
-    #     #     fname = f'CORnet-{FLAGS.model}_{layer}_{sublayer}_feats.npy'
-    #     #     np.save(os.path.join(FLAGS.output_path, fname), model_feats)
-    #     #     print("Extracted Features:\n", model_feats)
-
 
 def extract_true_label(basename: str) -> str:
     import re
-    # 1) Preferred: capture everything between the first "_" and the digits before "_init"
+    #  EITHER capture everything between the first "_" and the digits before "_init"
     m = re.search(r'^[^_]+_([A-Za-z_]+?)\d+_init', basename)
     if m:
         return m.group(1)
         # .replace('_', ' ')  # e.g. 'black_swan' -> 'black swan'
-    # 2) Fallback: join tokens until we hit 'init...'; then strip trailing digits
+    # ORRR join tokens until we hit 'init...'; then strip trailing digits
     toks = basename.split('_')[1:]  # skip epsilon at index 0
     acc = []
     for t in toks:
         if t.startswith('init'):
             break
         acc.append(t)
-    label_with_idx = '_'.join(acc)                 # e.g. 'black_swan100'
-    label = re.sub(r'\d+$', '', label_with_idx)    # -> 'black_swan'
+    label_with_idx = '_'.join(acc)                 # eg black_swan100
+    label = re.sub(r'\d+$', '', label_with_idx)    # becomes black_swan
     return label
     # .replace('_', ' ')
 
@@ -299,16 +210,16 @@ def extract_true_label(basename: str) -> str:
 def extract_true_label_from_path(image_path: str) -> str:
     import re, os
     basename = os.path.basename(image_path)
-    # 1) Adversarial pattern: <eps>_<label_with_idx>_init... (e.g., 0.005_bee_eater92_init...)
+    # adversarial pattern: <eps>_<label_with_idx>_init... (e.g., 0.005_bee_eater92_init...)
     m = re.search(r'^[^_]+_([A-Za-z_]+?)\d+_init', basename)
     if m:
         return m.group(1)
-    # 2) Standard ImageNet val folder: .../nxxxxx_label/filename
+    # standard imagenet val folder: .../nxxxxx_label/filename
     parent = os.path.basename(os.path.dirname(image_path))
     if '_' in parent:
         label_part = parent.split('_', 1)[1]  # after first underscore
         return label_part
-    # 3) Fallback: use last underscore token in filename (before extension)
+    # use last underscore token in filename (before extension)
     stem = os.path.splitext(basename)[0]
     pieces = stem.split('_')
     if pieces:
@@ -325,36 +236,36 @@ def test(layer='decoder', sublayer='avgpool', time_step=0, imsize=224):
         - time_step (not used here)
         - imsize (default 224): The size to resize input images to
     """
-    # Load the model with pretrained weights
+    # load the model with pretrained weights
     model = get_model(pretrained=True)
 
-    # Define preprocessing transformations for input images
+    # define preprocessing transformations for input images
     transform = torchvision.transforms.Compose([
         torchvision.transforms.Resize((imsize, imsize)),
         torchvision.transforms.ToTensor(),
         normalize,
     ])
 
-    # Set model to evaluation mode (disables dropout, batchnorm updates)
+    # set model to evaluation mode (disables dropout, batchnorm updates)
     model.eval()
 
-    # Load ImageNet class labels from a file (fixes "Unknown" issue)
+    # load imagenet class labels from a file (fixes "Unknown" issue)
     imagenet_classes = {i: label.strip() for i, label in enumerate(open("imagenet_classes.txt").readlines())}
     
     
-    # Get all image file paths from the dataset directory
+    # get all image file paths from the dataset directory
     fnames = []
     for ext in ["*.JPEG", "*.jpeg", "*.JPG", "*.jpg", "*.png"]:
         fnames.extend(glob.glob(os.path.join(FLAGS.data_path, "**", ext), recursive=True))
     # fnames = sorted(glob.glob(os.path.join(FLAGS.data_path, '**', '*.png', '*.JPEG', ), recursive=True))
 
-    # If no images are found, raise an error
+    # if no images are found, raise an error
     if len(fnames) == 0:
         raise FileNotFoundError(f'No files found in {FLAGS.data_path}')
 
     print(f"{FLAGS.data_path}\n\n")
     count = 0
-    # Iterate over images, process them, and pass through the model
+    # iterate over images, process them, and pass through the model
     with torch.no_grad():
         for image_path in tqdm.tqdm(fnames, desc="Testing Images"):
             try:
@@ -363,51 +274,14 @@ def test(layer='decoder', sublayer='avgpool', time_step=0, imsize=224):
                 print(f"⚠️ Unable to load image: {image_path}")
                 continue  # Skip the image and move on
 
-            im = transform(im)  # Apply transformations
-            im = im.unsqueeze(0)  # Add batch dimension
+            im = transform(im)  # apply transformations
+            im = im.unsqueeze(0)  # ad batch dimension
 
-            # Run the image through the model
+            # run the image through the model
             outputs = model(im)  # Forward pass
             _, predicted_index = torch.max(outputs, 1)  # Get highest logit index
             #CHECKPOINT:
             print(f"\n🔍 VGG Predicted Index: {predicted_index.item()}")
-
-            ##################################################################################
-            # with open("imagenet_class_index.json") as f:
-            #     imagenet_classes = json.load(f)
-            # imagenet_classes = {int(k): v[1] for k, v in imagenet_classes.items()}
-            # # if predicted_index.item() in imagenet_classes:
-            # #     predicted_label = imagenet_classes[predicted_index.item()]
-            # #####
-
-            # # Convert predicted index to human-readable label
-            # predicted_label = imagenet_classes.get(predicted_index.item(), "Unknown")
-            # # CHECKPOINT:
-            # print(f"🧐 Predicted Class Name: {predicted_label}")
-
-            # # Extract true label from filename (assumes format: "0.005_bee_eater92_initbee_eater_adv92_ac80c56c.png")
-            # basename = os.path.basename(image_path)  # e.g., '0.005_bee_eater92_initbee_eater_adv92_ac80c56c.png'
-            # parts = basename.split("_")
-            
-            # # Debug: print the full parsing process
-            # print(f"DEBUG: Full basename = '{basename}'")
-            # print(f"DEBUG: All parts = {parts}")
-            
-            # # Extract class name with index (e.g., "bee_eater92")
-            # class_with_index = parts[1]  # 'bee_eater92'
-            
-            # # Debug: print the extraction steps
-            # print(f"DEBUG: class_with_index = '{class_with_index}'")
-            
-            # # Extract just the class name by removing the index
-            # import re
-            # class_name = re.sub(r'\d+$', '', class_with_index)  # 'bee_eater'
-            # print(f"DEBUG: class_name after regex = '{class_name}'")
-            
-            # true_label = class_name.replace("_", " ")  # 'bee eater'
-            # print(f"DEBUG: true_label final = '{true_label}'")
-            # print(f"DEBUG: predicted_label = '{predicted_label}'")
-            # print(f"DEBUG: Comparison result = {true_label == predicted_label}")
             #################################################################################
             with open("imagenet_class_index.json") as f:
                 imagenet_classes = json.load(f)
@@ -416,58 +290,29 @@ def test(layer='decoder', sublayer='avgpool', time_step=0, imsize=224):
             #     predicted_label = imagenet_classes[predicted_index.item()]
             #####
 
-            # Convert predicted index to human-readable label
+            # convert predicted index to human-readable label
             predicted_label = imagenet_classes.get(predicted_index.item(), "Unknown")
             # CHECKPOINT:
             print(f"🧐 Predicted Class Name: {predicted_label}")
 
-            # Extract true label from filename (assumes format: "0.005_knot616_init616_adv616_23d77fcb.png")
+            # extract true label from filename (assume format: "0.005_knot616_init616_adv616_23d77fcb.png")
             basename = os.path.basename(image_path)
             true_label = extract_true_label_from_path(image_path)
 
-        # # Capture the class label (may contain underscores) before the trailing digits right before `_init`
-        # m = re.search(r'^[^_]+_(.+?)\d+_init', basename)
-        # if m:
-        #     label_raw = m.group(1)                 # e.g. 'prairie_chicken' or 'Maltese_dog' or 'barometer'
-        #     true_label = label_raw.replace('_', ' ')
-        # else:
-        #     # Fallback: accumulate tokens until 'init...' then strip trailing digits
-        #     toks = basename.split('_')[1:]         # skip epsilon at index 0
-        #     acc = []
-        #     for t in toks:
-        #         if t.startswith('init'):
-        #             break
-        #         acc.append(t)
-        #     label_with_idx = '_'.join(acc)
-        #     true_label = re.sub(r'\d+$', '', label_with_idx).replace('_', ' ')
 
 
-
-            # Compare with predicted label
+            # compare with predicted label
             if true_label == predicted_label:
                 print("✅ MATCH!")
                 count += 1
             else:
                 print("❌ NOPE")
-            # match = re.search(r"[\d.]+_([a-zA-Z]+)(\d+)_init\d+_adv\d+", basename)
-            # if match:
-            #     label_name = match.group(1)
-            #     label_index = match.group(2)
-            #     true_label = imagenet_classes.get(int(label_index), "Unknown")
-            #     print(f"✅ Match Found! Extracted True Label: {label_name} | Index: {label_index}")
-            # else:
-            #     print(f"❌ No match found for: {basename}")
-            #     true_label = "Unknown"
-        # end of name extraction
 
-            # if true_label == predicted_label:
-            #     count += 1
-
-            # Print results in a clear format
+            # print results in a clear format
             print(f"{basename} → True: {true_label} | VGG: {predicted_label}")
             #print(f"{os.path.basename(image_path)} → True: {true_label} | CORnet: {predicted_label}")
     
-    # Use the actual number of image files found instead of counting files in root directory
+    # use the actual number of image files found instead of counting files in root directory
     length = len(fnames)
     accuracy = (count/length)*100
     print(f"Testing Complete. Results saved to cornet_exp1_2019_results.csv\n Correct count is {count}\n Total images is {length}\n Accuracy is {accuracy:.2f}")
