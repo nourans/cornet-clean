@@ -1,0 +1,16 @@
+# Large files and data
+*.zip
+*.png
+*.jpg
+*.jpeg
+*.pkl
+*.h5
+*.npy
+*.txt
+*.xlsx
+*.csv
+adv_*outputs*/
+val/
+myenv/
+myvenv/
+.DS_Store
