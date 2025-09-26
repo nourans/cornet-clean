@@ -18,7 +18,7 @@ all_images = get_all_image_paths(root_dir)
 epsilons = [0.005, 0.01, 0.02, 0.03, 0.05, 0.1, 0.2, 0.3, 0.5]
 correct_before = 0
 total_images = 0
-# TRIAL 2: counting correct per epsilon
+# counting correct per epsilon
 correct_after_per_eps = {eps: 0 for eps in epsilons}
 total_per_eps = {eps: 0 for eps in epsilons}
 
