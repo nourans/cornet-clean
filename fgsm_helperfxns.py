@@ -26,7 +26,31 @@ def get_all_image_paths(root_dir):
     
 
 
-def get_input_batch(device, filename):
+def get_input_batch_alex(device, filename):
+    input_image = Image.open(filename).convert("RGB")
+    preprocess = transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
+    ])
+    input_tensor = preprocess(input_image)
+    input_batch = input_tensor.unsqueeze(0).to(device)
+    return input_batch
+
+def get_input_batch_cor(device, filename):
+    input_image = Image.open(filename).convert("RGB")
+    preprocess = transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
+    ])
+    input_tensor = preprocess(input_image)
+    input_batch = input_tensor.unsqueeze(0).to(device)
+    return input_batch
+
+def get_input_batch_vgg(device, filename):
     input_image = Image.open(filename).convert("RGB")
     preprocess = transforms.Compose([
         transforms.Resize(256),
