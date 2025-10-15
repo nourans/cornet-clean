@@ -1,4 +1,5 @@
 # to run this: python3 run.py test --data_path "./adv_outputs13/adv_outputs13_eps0.01" --model S > "cornet_pred_test13_all_new_eps0.01.txt"
+# to run this on ssh for western: nohup python3 run.py test --data_path "val/val" --model S > "cor_pred_0eps_test0903_1_all_new_eps0.txt" 2>&1 &
 import os, argparse, time, glob, pickle, subprocess, shlex, io, pprint
 
 import numpy as np
@@ -310,7 +311,7 @@ def extract_true_label_from_path(image_path: str) -> str:
         return pieces[-1]
     return "Unknown"
 
-def test(layer='decoder', sublayer='avgpool', time_step=0, imsize=224):
+def test(layer='decoder', sublayer='avgpool', time_step=0, imsize=256):
     """
     Tests the CORnet model on a set of images and prints the predicted labels.
 

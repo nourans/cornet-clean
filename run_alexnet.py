@@ -1,4 +1,5 @@
 # to run this: python3 run_alexnet.py test --data_path "./adv_CORoutputs4/adv_CORoutputs4_eps0.01" --model S > "alexnet_pred_cor_test1_all_new_eps0.01.txt"
+# to run this on ssh for western: nohup python3 run_alexnet.py test --data_path "val/val" --model S > "alex_pred_0eps_test0903_1_all_new_eps0.txt" 2>&1 &
 import os, argparse, time, glob, pickle, subprocess, shlex, io, pprint
 
 import numpy as np
@@ -111,7 +112,7 @@ def extract_true_label_from_path(image_path: str) -> str:
     return "Unknown"
 
 
-def test(layer='decoder', sublayer='avgpool', time_step=0, imsize=224):
+def test(layer='decoder', sublayer='avgpool', time_step=0, imsize=256):
     """
     Tests the AlexNet model on a set of adversarial images and prints the predicted labels.
 
@@ -219,7 +220,7 @@ class ImageNetTrain(object):
         dataset = torchvision.datasets.ImageFolder(
             os.path.join(FLAGS.data_path, 'train'),
             torchvision.transforms.Compose([
-                torchvision.transforms.RandomResizedCrop(224),
+                torchvision.transforms.RandomResizedCrop(227),
                 torchvision.transforms.RandomHorizontalFlip(),
                 torchvision.transforms.ToTensor(),
                 normalize,
@@ -270,7 +271,7 @@ class ImageNetVal(object):
             os.path.join(FLAGS.data_path, 'val_in_folders'),
             torchvision.transforms.Compose([
                 torchvision.transforms.Resize(256),
-                torchvision.transforms.CenterCrop(224),
+                torchvision.transforms.CenterCrop(227),
                 torchvision.transforms.ToTensor(),
                 normalize,
             ]))

@@ -1,3 +1,4 @@
+# to run this on ssh for western: nohup python3 run_alexnet.py test --data_path "val/val" --model S > "alex_pred_0eps_test0903_1_all_new_eps0.txt" 2>&1 &
 import os, argparse, time, glob, pickle, subprocess, shlex, io, pprint
 
 import numpy as np
