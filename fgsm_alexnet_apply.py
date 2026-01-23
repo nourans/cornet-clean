@@ -6,7 +6,7 @@ import torch.nn.functional as F
 import uuid
 import json
 import os
-from fgsm_helperfxnsOG import (
+from fgsm_helperfxns_new import (
     get_all_image_paths, get_input_batch, output_prediction, extract_true_label,
     compare_labels, fgsm_attack, save_adv_image, run_fgsm_pipeline
 )
@@ -49,7 +49,7 @@ for filename in all_images:
             correct_before += 1
 
             for eps in epsilons:
-                pred_after = run_fgsm_pipeline(model, device, filename, eps) # run fgsm attack
+                pred_after, perturbed_image = run_fgsm_pipeline(model, device, filename, eps) # run fgsm attack
                 # TRIAL 3: try commenting the line below out to see if count can be fixed
                 # total_per_eps[eps] += 1 # TRIAL 2: counting here how many runs are we getting with each eps
 
@@ -57,16 +57,16 @@ for filename in all_images:
                 modified by the FGSM attack — so if we reused it for the next epsilon, the attack wouldn't be 
                 applied to the original clean image but to an already-perturbed one)"""
                 # So re-generate it here:
-                input_batch = get_input_batch(device, filename)
-                input_batch.requires_grad = True
-                output = model(input_batch)
-                loss = F.nll_loss(F.log_softmax(output, dim=1), torch.tensor([true_index]).to(device))
-                model.zero_grad()
-                loss.backward()
-                data_grad = input_batch.grad.data
-                perturbed_image = fgsm_attack(input_batch, eps, data_grad)
+                # input_batch = get_input_batch(device, filename)
+                # input_batch.requires_grad = True
+                # output = model(input_batch)
+                # loss = F.nll_loss(F.log_softmax(output, dim=1), torch.tensor([true_index]).to(device))
+                # model.zero_grad()
+                # loss.backward()
+                # data_grad = input_batch.grad.data
+                # perturbed_image = fgsm_attack(input_batch, eps, data_grad)
                 try:
-                    save_adv_image(perturbed_image, eps, true_label, true_index, pred_before, pred_after, output_dir=f"adv_ALEXoutputs19/adv_outputs19_eps{eps}")
+                    save_adv_image(perturbed_image, eps, true_label, true_index, pred_before, pred_after, output_dir=f"adv_ALEXoutputs20/adv_outputs20_eps{eps}")
                     total_per_eps[eps] += 1 # TRIAL 3: counting here how many runs are we getting with each eps
                 except Exception as e:
                     print(f"❌ Failed to save image for {filename} at eps={eps}: {e}")
