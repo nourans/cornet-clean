@@ -168,6 +168,5 @@ def test_alexnet_on_folder(data_path, imsize=224):
     print(f"Accuracy: {count}/{len(fnames)} = {accuracy:.2f}%")
 
 
-# --- Section 4: Example Usage ---
 # run_fgsm_experiment("val/val", [0.01,0.05,0.1])
 # test_alexnet_on_folder("adv_ALEX_outputs/eps0.05")
