@@ -158,7 +158,7 @@ def run_fgsm_pipeline(model, device, filename, epsilon=0.05):
     output_adv = model(perturbed_data)
     pred_after = output_adv.argmax(dim=1).item()
 
-    return pred_after  # that's all
+    return pred_after # that's all
 
 
 def extract_true_label_from_path(image_path: str):

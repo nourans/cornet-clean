@@ -48,34 +48,34 @@ for filename in all_images:
 
             correct_before += 1
 
-            for eps in epsilons:
-                pred_after, perturbed_image = run_fgsm_pipeline(model, device, filename, eps) # run fgsm attack
-                # TRIAL 3: try commenting the line below out to see if count can be fixed
-                # total_per_eps[eps] += 1 # TRIAL 2: counting here how many runs are we getting with each eps
+        for eps in epsilons:
+            pred_after, perturbed_image = run_fgsm_pipeline(model, device, filename, eps) # run fgsm attack
+            # TRIAL 3: try commenting the line below out to see if count can be fixed
+            # total_per_eps[eps] += 1 # TRIAL 2: counting here how many runs are we getting with each eps
 
-                """Save perturbed image (need input tensor againbecause the previous input_batch may have been 
-                modified by the FGSM attack — so if we reused it for the next epsilon, the attack wouldn't be 
-                applied to the original clean image but to an already-perturbed one)"""
-                # So re-generate it here:
-                # input_batch = get_input_batch(device, filename)
-                # input_batch.requires_grad = True
-                # output = model(input_batch)
-                # loss = F.nll_loss(F.log_softmax(output, dim=1), torch.tensor([true_index]).to(device))
-                # model.zero_grad()
-                # loss.backward()
-                # data_grad = input_batch.grad.data
-                # perturbed_image = fgsm_attack(input_batch, eps, data_grad)
-                try:
-                    save_adv_image(perturbed_image, eps, true_label, true_index, pred_before, pred_after, output_dir=f"adv_ALEXoutputs20/adv_outputs20_eps{eps}")
-                    total_per_eps[eps] += 1 # TRIAL 3: counting here how many runs are we getting with each eps
-                except Exception as e:
-                    print(f"❌ Failed to save image for {filename} at eps={eps}: {e}")
-                # log or compare accuracy
-                is_correct_after = compare_labels(pred_after, true_index)
-                print(f"{filename} | eps={eps} | correct before? {is_correct_before} | correct after? {is_correct_after}")
-                if is_correct_after == True:
-                    correct_after_per_eps[eps] += 1
-                # print(f"Correct for epsilon = {eps} is {correct_after}") # TRIAL 2: delete this
+            """Save perturbed image (need input tensor againbecause the previous input_batch may have been 
+            modified by the FGSM attack — so if we reused it for the next epsilon, the attack wouldn't be 
+            applied to the original clean image but to an already-perturbed one)"""
+            # So re-generate it here:
+            # input_batch = get_input_batch(device, filename)
+            # input_batch.requires_grad = True
+            # output = model(input_batch)
+            # loss = F.nll_loss(F.log_softmax(output, dim=1), torch.tensor([true_index]).to(device))
+            # model.zero_grad()
+            # loss.backward()
+            # data_grad = input_batch.grad.data
+            # perturbed_image = fgsm_attack(input_batch, eps, data_grad)
+            try:
+                save_adv_image(perturbed_image, eps, true_label, true_index, pred_before, pred_after, output_dir=f"adv_ALEXoutputs20/adv_outputs20_eps{eps}")
+                # total_per_eps[eps] += 1 # TRIAL 3: counting here how many runs are we getting with each eps
+            except Exception as e:
+                print(f"❌ Failed to save image for {filename} at eps={eps}: {e}")
+            # log or compare accuracy
+            is_correct_after = compare_labels(pred_after, true_index)
+            print(f"{filename} | eps={eps} | correct before? {is_correct_before} | correct after? {is_correct_after}")
+            if is_correct_after == True:
+                correct_after_per_eps[eps] += 1
+            # print(f"Correct for epsilon = {eps} is {correct_after}") # TRIAL 2: delete this
         print(f"---------------------------------------------------------{filename} ends---------------------------------------------------------")
     except Exception as e:
         print(f"Error processing {filename}: {e}")
@@ -93,8 +93,9 @@ for eps in epsilons:
     else:
         # might wanna use current_count instead of total_per_eps[eps] for accuracy calculations.
         # it works now, but may cause problems in the future
-        acc = correct_after_per_eps[eps] / total_per_eps[eps]
-        print(f"Epsilon {eps}: Accuracy after FGSM = {correct_after_per_eps[eps]}/{total_per_eps[eps]} = {acc:.2%}")
+        acc = correct_after_per_eps[eps] / total_images # total_per_eps[eps]
+        # print(f"Epsilon {eps}: Accuracy after FGSM = {correct_after_per_eps[eps]}/{total_per_eps[eps]} = {acc:.2%}")
+        print(f"Epsilon {eps}: Accuracy after FGSM = {correct_after_per_eps[eps]}/{total_images} = {acc:.2%}")
 
 """
 import torch
